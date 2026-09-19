@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Cache-Control" content="no-store">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>Obsidian Tasks GCal Sync</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 680px;
+      margin: 4rem auto;
+      padding: 0 1.25rem;
+      line-height: 1.5;
+    }
+    .muted { opacity: .7; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Returning to Obsidian…</h1>
+    <p id="status">Processing the Google authorization response.</p>
+    <p><a id="open-obsidian" href="#" hidden>Open Obsidian</a></p>
+    <p class="muted">This page does not exchange or store OAuth tokens.</p>
+  </main>
+
+  <script>
+    (() => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+      const state = params.get("state");
+      const error = params.get("error");
+      const errorDescription = params.get("error_description");
+
+      // Remove the authorization response from browser history/address bar
+      // before attempting to return to Obsidian.
+      history.replaceState({}, document.title, window.location.pathname);
+
+      const status = document.getElementById("status");
+      const link = document.getElementById("open-obsidian");
+
+      const target = new URL("obsidian://auth/gcalsync");
+
+      if (code) target.searchParams.set("code", code);
+      if (state) target.searchParams.set("state", state);
+      if (error) target.searchParams.set("error", error);
+      if (errorDescription) target.searchParams.set("error_description", errorDescription);
+
+      if (!code && !error) {
+        status.textContent = "No OAuth response was found. Start Connect to Google from Obsidian.";
+        return;
+      }
+
+      const targetUrl = target.toString();
+      link.href = targetUrl;
+      link.hidden = false;
+
+      if (error) {
+        status.textContent = "Google authentication returned an error. Returning to Obsidian…";
+      } else {
+        status.textContent = "Authorization received. Returning to Obsidian…";
+      }
+
+      window.location.replace(targetUrl);
+    })();
+  </script>
+</body>
+</html>
